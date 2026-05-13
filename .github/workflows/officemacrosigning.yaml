@@ -1,0 +1,12 @@
+name: office-macro-signing
+run-name: Office Macro Signing Action
+on: [pull_request]
+jobs:
+    office-macro-signing:
+        runs-on: windows-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v6
+            - name: Install Microsoft SignTool
+              run: .github/scripts/Install-MicrosoftSignTool.ps1
+              shell: pwsh
