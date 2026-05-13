@@ -10,8 +10,12 @@ try {
         Revision = 0;
     }
 
+    $patternMatch = $windowsSdkPath -replace "[\\]","\\"
+    $patternMatch = $patternMatch -replace "[\(]","\("
+    $patternMatch = $patternMatch -replace "[\)]","\)"
+
     foreach ($signToolFile in $signToolFiles) {
-        if ($signToolFile.DirectoryName -match "^$($windowsSdkPath -replace "[\\]","\\")bin\\(?<Major>\d+)\.(?<Minor>\d+)\.(?<Build>\d+)\.(?<Revision>\d+)\\x86$") {
+        if ($signToolFile.DirectoryName -match "^$($patternMatch)bin\\(?<Major>\d+)\.(?<Minor>\d+)\.(?<Build>\d+)\.(?<Revision>\d+)\\x86$") {
             if ($Matches.Major -gt $signTool.Major -or
                 ($Matches.Major -eq $signTool.Major -and $Matches.Minor -gt $signTool.Minor) -or
                 ($Matches.Major -eq $signTool.Major -and $Matches.Minor -eq $signTool.Minor-and $Matches.Build -gt $signTool.Build) -or
