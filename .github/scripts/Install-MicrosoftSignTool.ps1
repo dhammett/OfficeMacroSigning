@@ -1,15 +1,15 @@
-#$windowsSdkDownloadUrl = "https://go.microsoft.com/fwlink/?linkid=2361309"
+$windowsSdkDownloadUrl = "https://go.microsoft.com/fwlink/?linkid=2361309"
 $officeSipX86DownloadUrl = "https://download.microsoft.com/download/c53e473c-3060-4ee9-ac5c-0ddbbeced4e5/OfficeSips_x86_16-0-19416-43425.exe"
 $visualCppRuntimeUrl = "https://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe"
 
-#$windowsSdkFilePath = "$($env:TEMP)\winsdksetup.exe"
+$windowsSdkFilePath = "$($env:TEMP)\winsdksetup.exe"
 $officeSipX86FilePath = "$($env:TEMP)\OfficeSips_x86_16-0-19416-43425.exe"
 $visualCppRedistFilePath = "$($env:TEMP)\vcredist_x86.exe"
 $regsvr32FilePath = "$($env:SYSTEMROOT)\System32\regsvr32.exe"
 $officeSipPath = "C:\OfficeSIP"
 #$windowsSdkPath = "C:\WindowsSDK"
 
-<#if ((Test-Path $windowsSdkFilePath) -eq $false) {
+if ((Test-Path $windowsSdkFilePath) -eq $false) {
     try {
 	    Invoke-WebRequest -Uri $windowsSdkDownloadUrl -Method Get -OutFile $windowsSdkFilePath -ErrorAction Stop
         Unblock-File -Path $windowsSdkFilePath -ErrorAction Stop
@@ -17,7 +17,7 @@ $officeSipPath = "C:\OfficeSIP"
         Write-Host "Failed to download the Windows SDK!. $($_.Exception.Message)" -ForegroundColor Red
         exit 1
     }
-}#>
+}
 
 if ((Test-Path $visualCppRedistFilePath) -eq $false) {
     try {
@@ -39,11 +39,11 @@ if ((Test-Path $officeSipX86FilePath) -eq $false) {
     }
 }
 
-<#$process = (Start-Process -FilePath $windowsSdkFilePath -ArgumentList "/installpath","$windowsSdkPath","/features","OptionId.SigningTools","/q","/norestart" -PassThru -Wait)
+$process = (Start-Process -FilePath $windowsSdkFilePath -ArgumentList "/features","OptionId.SigningTools","/q","/norestart" -PassThru -Wait)
 if ($process.ExitCode -ne 0) {
     Write-Host "$windowsSdkFilePath returned error code $($process.ExitCode)" -ForegroundColor Red
     exit $process.ExitCode
-}#>
+}
 
 $process = (Start-Process -FilePath $visualCppRedistFilePath -ArgumentList "/quiet","/norestart" -PassThru -Wait)
 if ($process.ExitCode -ne 0) {
