@@ -38,27 +38,27 @@ if ((Test-Path $officeSipX86FilePath) -eq $false) {
 
 $process = (Start-Process -FilePath $windowsSdkFilePath -ArgumentList "/installpath","$windowsSdkPath","/features","OptionId.SigningTools","/q","/norestart" -PassThru -Wait)
 if ($process.ExitCode -ne 0) {
-    Write-Host "$windowsSdkFilePath returned error code $errorCode" -ForegroundColor Red
+    Write-Host "$windowsSdkFilePath returned error code $($process.errorCode)" -ForegroundColor Red
 }
 
 $process = (Start-Process -FilePath $visualCppRedistFilePath -ArgumentList "/quiet","/norestart" -PassThru -Wait)
 if ($process.ExitCode -ne 0) {
-    Write-Host "$visualCppRedistFilePath returned error code $errorCode" -ForegroundColor Red
+    Write-Host "$visualCppRedistFilePath returned error code $($process.errorCode)" -ForegroundColor Red
 }
 
 $process = (Start-Process -FilePath $officeSipX86FilePath -ArgumentList "/extract:$officeSipPath","/quiet","/norestart" -PassThru -Wait)
 if ($process.ExitCode -ne 0) {
-    Write-Host "$officeSipX86FilePath returned error code $errorCode" -ForegroundColor Red
+    Write-Host "$officeSipX86FilePath returned error code $($process.errorCode)" -ForegroundColor Red
 }
 
 $process = (Start-Process -FilePath $regsvr32FilePath -ArgumentList "/s","$officeSipPath\msosip.dll" -PassThru -Wait)
 if ($process.ExitCode -ne 0) {
-    Write-Host "Registering $officeSipPath\msosip.dll returned error code $errorCode" -ForegroundColor Red
+    Write-Host "Registering $officeSipPath\msosip.dll returned error code $($process.errorCode)" -ForegroundColor Red
 }
 
 $process = (Start-Process -FilePath $regsvr32FilePath -ArgumentList "/s","$officeSipPath\msosipx.dll" -PassThru -Wait)
 if ($process.ExitCode -ne 0) {
-    Write-Host "Registering $officeSipPath\msosipx.dll returned error code $errorCode" -ForegroundColor Red
+    Write-Host "Registering $officeSipPath\msosipx.dll returned error code $($process.errorCode)" -ForegroundColor Red
 }
 
 # New-SelfSignedCertificate -Type CodeSigningCert -KeyAlgorithm RSA -KeyLength 2048 -KeyExportPolicy Exportable -Subject "E=david.hammett@domain.net,CN=David Hammett" -CertStoreLocation "Cert:\CurrentUser\My"
