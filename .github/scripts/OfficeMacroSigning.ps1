@@ -36,7 +36,7 @@ try {
     }
 	
 	$Base64Cert | Out-File "$($env:TEMP)\CodeSigning.pfx.txt" -Force -ErrorAction Stop
-	Start-Process -FilePath "$(env:SYSTEMROOT)\System32\certutil.exe" -ArgumentList "-decode","$($env:TEMP)\CodeSigning.pfx.txt","$($env:TEMP)\CodeSiging.pfx" -Wait -ErrorAction Stop
+	Start-Process -FilePath "$($env:SYSTEMROOT)\System32\certutil.exe" -ArgumentList "-decode","$($env:TEMP)\CodeSigning.pfx.txt","$($env:TEMP)\CodeSiging.pfx" -Wait -ErrorAction Stop
 	
 	if ((Test-Path ".\SignedDocuments") -eq $false) {
 		New-Item -Path ".\" -Name "SignedDocuments" -ItemType "Directory" -ErrorAction Stop | Out-Null
