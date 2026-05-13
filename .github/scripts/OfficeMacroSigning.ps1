@@ -44,7 +44,7 @@ try {
 	
 	$officeFiles = Get-ChildItem -Path ".\Office\*" -Include "*.docm","*.dotm","*.pptm","*.potm","*.ppsm","*.ppam","*.xlsm","*.xltm" -ErrorAction Stop
 	foreach ($officeFile in $officeFiles) {
-		$process = (Start-Process -FilePath "C:\OfficeSIP\OffSign.bat" -ArgumentList $signtool.Path,"sign /f $(env:TEMP)\CodeSigning.pfx /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256","verify /pa",$officeFile.FullName)
+		$process = (Start-Process -FilePath "C:\OfficeSIP\OffSign.bat" -ArgumentList $signtool.Path,"sign /f $($env:TEMP)\CodeSigning.pfx /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256","verify /pa",$officeFile.FullName -Passthru -Wait)
 		if ($process.ExitCode -ne 0) {
 			Write-Host "Code signing failed on file $($officeFile.FullName). Error Code $($process.ExitCode)"
 			continue
