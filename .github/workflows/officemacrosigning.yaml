@@ -19,4 +19,4 @@ jobs:
                 git config --local user.name "GitHub Actions Code Signing"
                 git add *
                 git commit -m "Office macros signed"
-                git push origin ${{ github.ref }}
+                git push
