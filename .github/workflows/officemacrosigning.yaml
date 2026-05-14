@@ -8,7 +8,7 @@ jobs:
             - name: Checkout Repository
               uses: actions/checkout@v6
             - name: Install Microsoft SignTool
-              run: .github/scripts/Install-MicrosoftSignTool.ps1
+              run: .github/scripts/Install-MicrosoftSignTool.ps1 -Latest
               shell: pwsh
             - name: Sign Office Macros
               run: .github/scripts/OfficeMacroSigning.ps1 -Base64Cert '${{ secrets.CODE_SIGNING_CERT }}' -Password '${{ secrets.CODE_SIGNING_SECRET }}'
