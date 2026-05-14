@@ -5,7 +5,7 @@ param(
     [string]$RootCert,
     [string]$IntermidateCert,
 	[Parameter(Mandatory=$true)]
-	[string]$Password
+	[SecureString]$Password
 )
 try {
     $windowsSdkRegistry = Get-ItemProperty -Path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" -ErrorAction Stop
@@ -70,7 +70,7 @@ try {
     $officeFileCount = 0
 
 	foreach ($officeFile in $officeFiles) {
-		& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /f $($env:TEMP)\CodeSigning.pfx /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($officeFile.FullName)"
+		& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /f $($env:TEMP)\CodeSigning.pfx /p $($Password | ConvertFrom-SecureString -AsPlainText) /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($officeFile.FullName)"
 		if ($LASTEXITCODE -ne 0) {
 			Write-Host "Code signing failed on file $($officeFile.FullName). Error Code $LASTEXITCODE"
 			continue
