@@ -140,10 +140,6 @@ foreach ($officeFile in $officeFiles) {
 	
 	$officeFileCount++
 }
-} catch {
-    Write-Host "Failed to code sign office macros. $($_.Exception.Message)"
-    exit 1
-}
 
 Remove-Item -Path $codeSigningPfxPath,$codeSigningPemPath,$rootCertPath,$intermidateCertPath -ErrorAction SilentlyContinue
 
