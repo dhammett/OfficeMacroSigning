@@ -144,6 +144,6 @@ foreach ($officeFile in $officeFiles) {
 Remove-Item -Path $codeSigningPfxPath,$codeSigningPemPath,$rootCertPath,$intermidateCertPath -ErrorAction SilentlyContinue
 
 Write-Host "Code signing succeeeded for $officeFileCount out of $($officeFiles.Count)"
-if ($officeFileCount -ne $officeFiles.Count) {
+if ($officeFiles.Count -eq 0 -or $officeFileCount -ne $officeFiles.Count) {
     exit 1
 }
