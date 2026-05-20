@@ -6,7 +6,8 @@ on:
       - submitted
   merge_group:
   workflow_dispatch:
-
+env:
+  GH_TOKEN: ${{ github.token }}
 jobs:
   office-macro-signing:
     name: office-macro-signing
