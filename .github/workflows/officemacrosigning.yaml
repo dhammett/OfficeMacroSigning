@@ -5,7 +5,7 @@ on:
     types:
       - submitted
 jobs:
-  approved:
+  office-macro-signing:
     if: github.event.review.state == 'approved'
     runs-on: windows-latest
     steps:
