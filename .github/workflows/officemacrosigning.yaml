@@ -1,12 +1,12 @@
 name: office-macro-signing
 run-name: Office Macro Signing Action
 on:
-  pull_request:
+  pull_request_review:
     types:
-      - closed
+      - submitted
 jobs:
-  if_merged:
-    if: github.event.pull_request.merged == true
+  approved:
+    if: github.event.review.state == 'approved'
     runs-on: windows-latest
     steps:
         - name: Checkout Repository
