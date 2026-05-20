@@ -7,6 +7,7 @@ on:
     types: [checks_requested]
 jobs:
   office-macro-signing:
+    name: office-macro-signing
     if: github.event.review.state == 'approved'
     runs-on: windows-latest
     steps:
