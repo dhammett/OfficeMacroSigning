@@ -1,21 +1,21 @@
 name: office-macro-signing
 run-name: Office Macro Signing
 on:
-  pull_request_review:
-    types:
-      - submitted
-  merge_group:
+  push: 
+    branches:
+      - main
+    paths: Office/**
   workflow_dispatch:
+
 jobs:
   office-macro-signing:
     name: office-macro-signing
-    if: github.event.review.state == 'approved'
     runs-on: windows-latest
     steps:
         - name: Checkout Repository
           uses: actions/checkout@v6
           with:
-            ref: ${{ github.event.pull_request.head.ref }}
+            ref: ${{ github.head_ref }}
         - name: Install Microsoft SignTool
           run: .github/scripts/Install-MicrosoftSignTool.ps1 -Latest
           shell: pwsh
