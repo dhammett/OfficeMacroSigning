@@ -73,7 +73,7 @@ rem Find if signtool.exe is located in the specified file path
 
 echo.
 echo Finding signtool.exe...
-set azuresigntoolPath="%~dp0%azuresigntool%"
+set azuresigntoolPath="%userprofile%\.dotnet\tools\%azuresigntool%"
 set signtoolPath="%signtoolPath%%signtool%"
 IF EXIST %signtoolPath% (
 	echo Successfully found the location of signtool.exe:
@@ -116,7 +116,7 @@ rem Run sign and verify commands
 echo.
 echo ============================ Calling offclearsig command ===========================
 echo.
-call "%offclearsigPath%" "%fileName%"
+call %offclearsigPath% %fileName%
 if %errorlevel%==0 (
 	goto LRun1stSign
 ) else (

@@ -5,13 +5,11 @@ param(
 $windowsSdkDownloadUrl = "https://go.microsoft.com/fwlink/?linkid=2361309"
 $officeSipX86DownloadUrl = "https://download.microsoft.com/download/c53e473c-3060-4ee9-ac5c-0ddbbeced4e5/OfficeSips_x86_16-0-19416-43425.exe"
 $visualCppRuntimeUrl = "https://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe"
-$azureSignToolUrl = "https://github.com/vcsjones/AzureSignTool/releases/download/v7.0.0/AzureSignTool-x64.exe"
 $dotNetDownloadUrl = "https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.300/dotnet-sdk-10.0.300-win-x86.exe"
 
 $windowsSdkFilePath = "$($env:TEMP)\winsdksetup.exe"
 $officeSipX86FilePath = "$($env:TEMP)\OfficeSips_x86_16-0-19416-43425.exe"
 $visualCppRedistFilePath = "$($env:TEMP)\vcredist_x86.exe"
-$azureSignToolFilePath = "$($env:TEMP)\AzureSignTool.exe"
 $dotnetFilePath = "$($env:TEMP)\dotnet-sdk-10.0.300-win-x86.exe"
 $regsvr32FilePath = "$($env:SYSTEMROOT)\System32\regsvr32.exe"
 $officeSipPath = "C:\OfficeSIP"
@@ -42,16 +40,6 @@ if ((Test-Path $officeSipX86FilePath) -eq $false) {
         Unblock-File -Path $officeSipX86FilePath -ErrorAction Stop
     } catch {
         Write-Host "Failed to download the Office SIP!. $($_.Exception.Message)" -ForegroundColor Red
-        exit 1
-    }
-}
-
-if ((Test-Path $azureSignToolFilePath) -eq $false) {
-    try {
-	    Invoke-WebRequest -Uri $azureSignToolUrl -Method Get -OutFile $azureSignToolFilePath -ErrorAction Stop
-        Unblock-File -Path $azureSignToolFilePath -ErrorAction Stop
-    } catch {
-        Write-Host "Failed to download the AzureSignTool!. $($_.Exception.Message)" -ForegroundColor Red
         exit 1
     }
 }
@@ -98,9 +86,20 @@ if ($process.ExitCode -ne 0) {
     exit $process.ExitCode
 }
 
+$process = (Start-Process -FilePath $dotnetFilePath -ArgumentList "/install","/quiet","/norestart" -PassThru -Wait)
+if ($process.ExitCode -ne 0) {
+    Write-Host "Installing .NET returned error code $($process.ExitCode)" -ForegroundColor Red
+    exit $process.ExitCode
+}
+
+$process = (Start-Process -FilePath "C:\Program Files (x86)\dotnet\dotnet.exe" -ArgumentList "tool","install","--global","AzureSignTool","--version","7.0.0" -PassThru -Wait)
+if ($process.ExitCode -ne 0) {
+    Write-Host "Installing AzureSignTool returned error code $($process.ExitCode)" -ForegroundColor Red
+    exit $process.ExitCode
+}
+
 try {
-    Move-Item $azureSignToolFilePath $officeSipPath -Force -ErrorAction Stop
-    Copy-Item "./.github/scripts/AzureOffSign.bat" "$officeSipPath" -Force -ErrorAction Stop
+    Copy-Item ".\.github\scripts\AzureOffSign.bat" $officeSipPath -Force -ErrorAction Stop
 } catch {
     Write-Host "Failed to move AzureSignTool and/or copy AzureOffSign.bat. $($_.Exception.Message)"
     exit 1
