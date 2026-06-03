@@ -15,8 +15,17 @@ param(
 	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
 	[string]$ClientId,
 	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
-	[string]$CertName
+	[string]$CertName,
+	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
+	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[string]$Path
 )
+
+if ((Test-Path $Path) -eq $false) {
+	Write-Host "Unable to find $Path in the repo!"
+	exit 1
+}
+
 try {
     $windowsSdkRegistry = Get-ItemProperty -Path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" -ErrorAction Stop
     $windowsSdkPath = $windowsSdkRegistry.KitsRoot10
@@ -119,8 +128,8 @@ try {
 }
 
 try {
-	if ((Test-Path ".\Office\SignedDocuments") -eq $false) {
-		New-Item -Path ".\Office" -Name "SignedDocuments" -ItemType "Directory" -ErrorAction Stop | Out-Null
+	if ((Test-Path "$Path\SignedDocuments") -eq $false) {
+		New-Item -Path $Path -Name "SignedDocuments" -ItemType "Directory" -ErrorAction Stop | Out-Null
 	}
 } catch {
 	Write-Host "Creating folder for moving signed documents to failed. $($_.Exception.Message)"
@@ -128,7 +137,7 @@ try {
 }
 
 try {
-	$officeFiles = Get-ChildItem -Path ".\Office\*" -Include "*.docm","*.dotm","*.pptm","*.potm","*.ppsm","*.ppam","*.xlsm","*.xltm" -ErrorAction Stop
+	$officeFiles = Get-ChildItem -Path "$Path\*" -Include "*.docm","*.dotm","*.pptm","*.potm","*.ppsm","*.ppam","*.xlsm","*.xltm" -ErrorAction Stop
 } catch {
 	Write-Host "Finding office documents threw an exception. $($_.Exception.Message)"
 	exit 1
@@ -149,7 +158,7 @@ foreach ($officeFile in $officeFiles) {
 	}
 	
 	try {
-		Move-Item -Path $officeFile.FullName -Destination ".\Office\SignedDocuments" -Force -ErrorAction Stop
+		Move-Item -Path $officeFile.FullName -Destination "$Path\SignedDocuments" -Force -ErrorAction Stop
 	} catch {
 		Write-Host "Moving file $($officeFile.FullName) failed. $($_.Exception.Message)"
 		continue
