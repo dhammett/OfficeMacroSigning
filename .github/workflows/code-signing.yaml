@@ -20,7 +20,6 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
-    if: github.event_name == 'pull_request'
     runs-on: unbuntu-latest
     steps:
       - name: Label Pull Request
