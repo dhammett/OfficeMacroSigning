@@ -1,10 +1,6 @@
 name: code-signing
 run-name: Code Signing
 on:
-  pull_request:
-    types:
-      - opened
-      - reopened
   pull_request_review:
     types:
       - submitted
