@@ -1,0 +1,3 @@
+office-macros:
+  - changed-files:
+    - any-glob-to-any-file: 'Office/*'

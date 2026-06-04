@@ -1,6 +1,6 @@
 param(
 	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
-	[string]$Base64Cert,
+	[string]$CodeSigningCert,
 	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
 	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
     [string]$RootCert,
@@ -14,6 +14,8 @@ param(
 	[string]$TenantId,
 	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
 	[string]$ClientId,
+	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[string]$KeyVaultUrl,
 	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
 	[string]$CertName,
 	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
@@ -57,8 +59,8 @@ foreach ($signToolFile in $signToolFiles) {
 	if ($signToolFile.DirectoryName -match "^$($patternMatch)bin\\(?<Major>\d+)\.(?<Minor>\d+)\.(?<Build>\d+)\.(?<Revision>\d+)\\x86$") {
 		if ($Matches.Major -gt $signTool.Major -or
 			($Matches.Major -eq $signTool.Major -and $Matches.Minor -gt $signTool.Minor) -or
-			($Matches.Major -eq $signTool.Major -and $Matches.Minor -eq $signTool.Minor-and $Matches.Build -gt $signTool.Build) -or
-			($Matches.Major -eq $signTool.Major -and $Matches.Minor -eq $signTool.Minor-and $Matches.Build -eq $signTool.Build -and $Matches.Revision -gt $signTool.Revision)) {
+			($Matches.Major -eq $signTool.Major -and $Matches.Minor -eq $signTool.Minor -and $Matches.Build -gt $signTool.Build) -or
+			($Matches.Major -eq $signTool.Major -and $Matches.Minor -eq $signTool.Minor -and $Matches.Build -eq $signTool.Build -and $Matches.Revision -gt $signTool.Revision)) {
 			$signTool.Path = "$($signToolFile.DirectoryName)\"
 			$signTool.Major = $Matches.Major
 			$signTool.Minor = $Matches.Minor
@@ -72,10 +74,11 @@ $codeSigningPemPath = "$($env:TEMP)\CodeSigning.pem"
 $codeSigningPfxPath = "$($env:TEMP)\CodeSigning.pfx"
 $rootCertPath = "$($env:TEMP)\Root.cer"
 $intermidateCertPath = "$($env:TEMP)\Intermediate.cer"
+$signedFilePath = "SignedFiles"
 
-if ($PSBoundParameters.ContainsKey("Base64Cert")) {
+if ($PSBoundParameters.ContainsKey("CodeSigningCert")) {
 	try {
-		$Base64Cert | Out-File $codeSigningPemPath -Force -ErrorAction Stop
+		$CodeSigningCert | Out-File $codeSigningPemPath -Force -ErrorAction Stop
 	} catch {
 		Write-Host "Downloading CodeSigning cert from GitHub secret failed. $($_.Exception.Message)"
 		exit 1
@@ -128,8 +131,8 @@ try {
 }
 
 try {
-	if ((Test-Path "$Path\SignedDocuments") -eq $false) {
-		New-Item -Path $Path -Name "SignedDocuments" -ItemType "Directory" -ErrorAction Stop | Out-Null
+	if ((Test-Path "$Path\$signedFilePath") -eq $false) {
+		New-Item -Path $Path -Name $signedFilePath -ItemType "Directory" -ErrorAction Stop | Out-Null
 	}
 } catch {
 	Write-Host "Creating folder for moving signed documents to failed. $($_.Exception.Message)"
@@ -139,17 +142,17 @@ try {
 try {
 	$officeFiles = Get-ChildItem -Path "$Path\*" -Include "*.docm","*.dotm","*.pptm","*.potm","*.ppsm","*.ppam","*.xlsm","*.xltm" -ErrorAction Stop
 } catch {
-	Write-Host "Finding office documents threw an exception. $($_.Exception.Message)"
+	Write-Host "Finding office documents in '$Path' threw an exception. $($_.Exception.Message)"
 	exit 1
 }
 
 $officeFileCount = 0
 
 foreach ($officeFile in $officeFiles) {
-	if ($PSBoundParameters.ContainsKey("Base64Cert")) {
+	if ($PSBoundParameters.ContainsKey("CodeSigningCert")) {
 		& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /f $codeSigningPfxPath /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($officeFile.FullName)"
 	} elseif ($PSBoundParameters.ContainsKey("ClientId")) {
-		& C:\OfficeSIP\AzureOffSign.bat "$($signtool.Path)" "sign -kvu https://cs-vault-prod-pki.vault.azure.net -kvt $TenantId -kvi $ClientId -kvs $Password -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($officeFile.FullName)"
+		& C:\OfficeSIP\AzureOffSign.bat "$($signtool.Path)" "sign -kvu $KeyVaultUrl -kvt $TenantId -kvi $ClientId -kvs $Password -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($officeFile.FullName)"
 	}
 
 	if ($LASTEXITCODE -ne 0) {
@@ -158,7 +161,7 @@ foreach ($officeFile in $officeFiles) {
 	}
 	
 	try {
-		Move-Item -Path $officeFile.FullName -Destination "$Path\SignedDocuments" -Force -ErrorAction Stop
+		Move-Item -Path $officeFile.FullName -Destination "$Path\$signedFilePath" -Force -ErrorAction Stop
 	} catch {
 		Write-Host "Moving file $($officeFile.FullName) failed. $($_.Exception.Message)"
 		continue
@@ -167,9 +170,9 @@ foreach ($officeFile in $officeFiles) {
 	$officeFileCount++
 }
 
-Remove-Item -Path $codeSigningPfxPath,$codeSigningPemPath,$rootCertPath,$intermidateCertPath -ErrorAction SilentlyContinue
-
-Write-Host "Code signing succeeeded for $officeFileCount out of $($officeFiles.Count)"
+Write-Host "Office macro signing succeeeded for $officeFileCount out of $($officeFiles.Count)"
 if ($officeFileCount -ne $officeFiles.Count) {
-    exit 1
+	exit 1
 }
+
+Remove-Item -Path $codeSigningPfxPath,$codeSigningPemPath,$rootCertPath,$intermidateCertPath -ErrorAction SilentlyContinue
