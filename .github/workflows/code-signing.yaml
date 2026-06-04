@@ -16,7 +16,7 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
-    runs-on: unbuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Label Pull Request
         uses: actions/labeler@v6
