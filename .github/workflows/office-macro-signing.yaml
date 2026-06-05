@@ -6,7 +6,8 @@ on:
       - main
     paths:
       - 'Office/**'
-      - '!Office/SignedFiles/**'
+    paths-ignore:
+      - 'Office/SignedFiles/**'
 
 jobs:
   office-macro-signing:
