@@ -6,8 +6,6 @@ on:
       - main
     paths:
       - 'Office/**'
-env:
-  GH_TOKEN: ${{ secrets.CODE_SIGNING_PAT }}
 
 jobs:
   office-macro-signing:
@@ -19,6 +17,7 @@ jobs:
         - name: Checkout Repository
           uses: actions/checkout@v6
           with:
+            token: ${{ secrets.CODE_SIGNING_PAT }}
             ref: ${{ github.head_ref }}
         - name: Install Microsoft SignTool
           shell: pwsh
