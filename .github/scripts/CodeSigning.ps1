@@ -147,7 +147,7 @@ $officeFileExtensions = @(".docm",".dotm",".pptm",".potm",".ppsm",".ppam",".xlsm
 try {
 	$files = Get-ChildItem -Path ".\$Path\*" -Include $FileExtension -ErrorAction Stop
 } catch {
-	Write-Host "Finding office documents in '$Path' threw an exception. $($_.Exception.Message)"
+	Write-Host "Finding files in '$Path' threw an exception. $($_.Exception.Message)"
 	exit 1
 }
 
