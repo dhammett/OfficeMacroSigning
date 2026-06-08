@@ -20,7 +20,10 @@ param(
 	[string]$CertName,
 	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
 	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
-	[string]$Path
+	[string]$Path,
+	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
+	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[string[]]$FileExtension
 )
 
 if ((Test-Path $Path) -eq $false) {
@@ -74,7 +77,7 @@ $codeSigningPemPath = "$($env:TEMP)\CodeSigning.pem"
 $codeSigningPfxPath = "$($env:TEMP)\CodeSigning.pfx"
 $rootCertPath = "$($env:TEMP)\Root.cer"
 $intermidateCertPath = "$($env:TEMP)\Intermediate.cer"
-$signedFilePath = "SignedFiles"
+$signedFilePath = "signed-files"
 
 if ($PSBoundParameters.ContainsKey("CodeSigningCert")) {
 	try {
@@ -131,47 +134,54 @@ try {
 }
 
 try {
-	if ((Test-Path "$Path\$signedFilePath") -eq $false) {
-		New-Item -Path $Path -Name $signedFilePath -ItemType "Directory" -ErrorAction Stop | Out-Null
+	if ((Test-Path ".\$signedFilePath\$Path") -eq $false) {
+		New-Item -Path ".\$signedFilePath" -Name $Path -ItemType "Directory" -ErrorAction Stop | Out-Null
 	}
 } catch {
-	Write-Host "Creating folder for moving signed documents to failed. $($_.Exception.Message)"
+	Write-Host "Creating folder '.\$signedFilePath\$Path' for moving signed documents to failed. $($_.Exception.Message)"
 	exit 1
 }
 
+$officeFileExtensions = @(".docm",".dotm",".pptm",".potm",".ppsm",".ppam",".xlsm",".xltm")
+
 try {
-	$officeFiles = Get-ChildItem -Path "$Path\*" -Include "*.docm","*.dotm","*.pptm","*.potm","*.ppsm","*.ppam","*.xlsm","*.xltm" -ErrorAction Stop
+	$files = Get-ChildItem -Path ".\$Path\*" -Include $FileExtension -ErrorAction Stop
 } catch {
 	Write-Host "Finding office documents in '$Path' threw an exception. $($_.Exception.Message)"
 	exit 1
 }
 
-$officeFileCount = 0
+$fileCount = 0
 
-foreach ($officeFile in $officeFiles) {
-	if ($PSBoundParameters.ContainsKey("CodeSigningCert")) {
-		& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /f $codeSigningPfxPath /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($officeFile.FullName)"
-	} elseif ($PSBoundParameters.ContainsKey("ClientId")) {
-		& C:\OfficeSIP\AzureOffSign.bat "$($signtool.Path)" "sign -kvu $KeyVaultUrl -kvt $TenantId -kvi $ClientId -kvs $Password -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($officeFile.FullName)"
-	}
-
-	if ($LASTEXITCODE -ne 0) {
-		Write-Host "Code signing failed on file $($officeFile.FullName). Error Code $LASTEXITCODE"
+foreach ($file in $files) {
+	if ($officeFileExtensions -contains $file.Extension) {
+		if ($PSBoundParameters.ContainsKey("CodeSigningCert")) {
+			& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /f $codeSigningPfxPath /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($file.FullName)"
+		} elseif ($PSBoundParameters.ContainsKey("ClientId")) {
+			& C:\OfficeSIP\AzureOffSign.bat "$($signtool.Path)" "sign -kvu $KeyVaultUrl -kvt $TenantId -kvi $ClientId -kvs $Password -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($file.FullName)"
+		}
+		
+		if ($LastExitCode -ne 0) {
+			Write-Host "Code signing failed on file $($file.FullName). Error Code $LastExitCode"
+			continue
+		}
+	} else {
+		Write-Host "File extension $($file.Extension) is not currently supported, '$file.FullName'"
 		continue
 	}
 	
 	try {
-		Move-Item -Path $officeFile.FullName -Destination "$Path\$signedFilePath" -Force -ErrorAction Stop
+		Move-Item -Path $file.FullName -Destination ".\$signedFilePath\$Path" -Force -ErrorAction Stop
 	} catch {
-		Write-Host "Moving file $($officeFile.FullName) failed. $($_.Exception.Message)"
+		Write-Host "Moving file '$($file.FullName)' to '.\$signedFilePath\$Path' failed. $($_.Exception.Message)"
 		continue
 	}
 	
-	$officeFileCount++
+	$fileCount++
 }
 
-Write-Host "Office macro signing succeeeded for $officeFileCount out of $($officeFiles.Count)"
-if ($officeFileCount -ne $officeFiles.Count) {
+Write-Host "File signing succeeeded for $fileCount out of $($files.Count)"
+if ($fileCount -ne $files.Count) {
 	exit 1
 }
 
