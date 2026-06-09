@@ -26,7 +26,15 @@ param(
 	[string[]]$FileExtension
 )
 
-$FileExtension | ForEach-Object { Write-Host "File Extension: $_" }
+$FileExtension = $FileExtension | ForEach-Object {
+    if ($_.StartsWith("*.")) {
+        $_
+    } elseif ($_.StartsWith(".")) {
+        "*$_"
+    } else {
+        "*.$_"
+    }
+}
 
 if ((Test-Path $Path) -eq $false) {
 	Write-Host "Unable to find $Path in the repo!"
