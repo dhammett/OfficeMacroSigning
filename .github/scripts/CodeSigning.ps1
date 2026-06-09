@@ -175,7 +175,18 @@ foreach ($file in $files) {
 			Write-Host "Code signing failed on file $($file.FullName). Error Code $LastExitCode"
 			continue
 		}
-	} else {
+	} elseif ($file.Extension -eq ".rdp") {
+		if ($PSBoundParameters.ContainsKey("CodeSigningCert")) {
+			& "$($env:SYSTEMROOT)\System32\rdpsign.exe" /sha256 $cert.Thumbprint /v "$($file.FullName)"
+			if ($LastExitCode -ne 0) {
+				Write-Host "Signing RDP file '$($file.FullName)' failed with error code $LastExitCode"
+				continue
+			}
+		} else {
+			Write-Host "Need to specify the CodeSigningCert script parameter to sign RDP file. The ClientId option does not work"
+			continue
+		}
+	}else {
 		Write-Host "File extension $($file.Extension) is not currently supported, '$file.FullName'"
 		continue
 	}

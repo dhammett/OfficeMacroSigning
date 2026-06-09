@@ -1,0 +1,34 @@
+name: rdp-signing
+run-name: RDP Signing
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'RDP/**.rdp'
+
+jobs:
+  office-macro-signing:
+    name: rdp-signing
+    permissions:
+      contents: write
+    runs-on: windows-latest
+    steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v6
+          with:
+            token: ${{ secrets.CODE_SIGNING_PAT }}
+            ref: ${{ github.head_ref }}
+        - name: Install Microsoft SignTool
+          shell: pwsh
+          run: .github/scripts/Install-MicrosoftSignTool.ps1 -Latest
+        - name: Sign Office Macros
+          shell: pwsh
+          run: .github/scripts/CodeSigning.ps1 -CodeSigningCert '${{ secrets.CODE_SIGNING_CERT }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_SECRET }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path 'RDP' -FileExtension '.rdp'
+        - name: Commit changes to GitHub
+          run: |
+            git config --local user.name "GitHub Actions[bot]"
+            git config --local user.email "github-actions@users.noreply.github.com"
+            git add *
+            git commit -m "GitHub Action RDP signed"
+            git push
